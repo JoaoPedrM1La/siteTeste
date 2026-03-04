@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Management System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="top-bar">
+            <div class="search">
+                <input type="text" placeholder="Pesquisar" id="barPesquisar">
+                <button id="btnPesquisar">Pesquisar</button>
+            </div>
+
+            <div class="menu-buttons">
+                <button id="btnEstoque">Estoque</button>
+                <button id="btnCompra">Compras</button>
+                <button id="btnVenda">Vendas</button>
+            </div>
+        </header>
+
+        <div id="modal" class="modal">
+            <div class="modal-content">
+                <h2 id="modalTitle"></h2>
+
+                <form id="dynamicForm"></form>
+
+                <div class="modal-buttons">
+                    <button type="button" id="btnSave">Salvar</button>
+                    <button type="button" id="btnCancel">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <ul class="container" id="output"></ul>
+
+        <footer class="footer">
+            <button id="btnAdd">+</button>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
