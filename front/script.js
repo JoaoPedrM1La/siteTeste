@@ -20,8 +20,8 @@ const config = {
             { name: "vendedor", type: "text", placeholder: "Vendedor" },
             { name: "quantidade", type: "number", placeholder: "Quantidade" },
             { name: "valor_unitario", type: "number", placeholder: "Valor unitário(p/kg)" },
-            { name: "data_compra", type: "text", placeholder: "Data da compra" },
-            { name: "data_pagamento", type: "text", placeholder: "Data do pagamento" }
+            { name: "data_compra", type: "date", placeholder: "Data da compra" },
+            { name: "data_pagamento", type: "date", placeholder: "Data do pagamento" }
         ]
     },
     venda: {
@@ -32,8 +32,8 @@ const config = {
             { name: "comprador", type: "text", placeholder: "Comprador" },
             { name: "quantidade", type: "number", placeholder: "Quantidade" },
             { name: "valor_unitario", type: "number", placeholder: "Valor unitário(p/kg)" },
-            { name: "data_venda", type: "text", placeholder: "Data da venda" },
-            { name: "data_recebimento", type: "text", placeholder: "Data de recebimento" }
+            { name: "data_venda", type: "date", placeholder: "Data da venda" },
+            { name: "data_recebimento", type: "date", placeholder: "Data de recebimento" }
         ] 
     }
 }
@@ -62,61 +62,117 @@ async function loadFunc() {
         });
         const datas = await resposta.json();
 
-        createCards(datas);
+        createTable(datas);
     } catch (error) {
         console.log("Erro na requisição", error);
     }
 }
 
-async function createCards(dados) {
+async function createTable(dados) {
     const output = document.getElementById('output');
     output.innerHTML = "";
 
+    const header = tableHeader();
+    const body = document.createElement('tbody');
+
     dados.forEach(dado => {
-        const card = innerCard(dado);
-        output.appendChild(card);
+        const row = tableBody(dado);
+        body.appendChild(row);
     });
+
+    output.appendChild(header);
+    output.appendChild(body);
 }
 
-function innerCard(dado) {
-    const card = document.createElement('div');
-    card.classList.add('card');
+function tableHeader() {
+    const row = document.createElement('thead');
 
     if(modoAtual === "estoque") {
-        card.innerHTML = `
-        <h3>${dado.nome}</h3>
-        <p>Quantidade: ${dado.quantidade}</p>
-        <div class="buttons">
-            <button onclick="delFunc(${dado.id_prod})">Del</button>
-            <button onclick="updFunc(${dado.id_prod})">Upd</button>
-        </div>
+        row.innerHTML = `
+        <tr>
+            <th>Nome</th>
+            <th>Quantidade</th>
+            <th>Funções</th>
+        </tr>
         `;
     } else if(modoAtual === "compra") {
-        card.innerHTML = `
-        <p>Produto: ${dado.id_prod}</p>
-        <p>Vendedor: ${dado.vendedor}</p>
-        <p>Quantidade: ${dado.quantidade}</p><br>
-        <p>Valor_unitario: ${dado.valor_unitario} - Valor_total: ${dado.valor_total}</p>
-        <p>Data_compra: ${dado.data_compra} - Data_pagamento: ${dado.data_pagamento}</p>
-        <div class="buttons">
-            <button onclick="delFunc(${dado.id_compra})">Del</button>
-            <button onclick="updFunc(${dado.id_compra})">Upd</button>
-        </div>
+        row.innerHTML = `
+        <tr>
+            <th>Produto</th>
+            <th>Vendedor</th>
+            <th>Quantidade</th>
+            <th>Valor Unit</th>
+            <th>Valor Total</th>
+            <th>Data Compra</th>
+            <th>Data Pagamento</th>
+            <th>Funções</th>
+        </tr>
         `;
     } else { // venda
-        card.innerHTML = `
-        <p>Produto: ${dado.id_prod}</p>
-        <p>Comprador: ${dado.comprador}</p>
-        <p>Quantidade: ${dado.quantidade}</p><br>
-        <p>Valor_unitario: ${dado.valor_unitario} - Valor_total: ${dado.valor_total}</p>
-        <p>Data_venda: ${dado.data_venda} - Data_recebimento: ${dado.data_recebimento}</p>
-        <div class="buttons">
-            <button onclick="delFunc(${dado.id_venda})">Del</button>
-            <button onclick="updFunc(${dado.id_venda})">Upd</button>
-        </div>
+        row.innerHTML = `
+        <tr>
+            <th>Produto</th>
+            <th>Comprador</th>
+            <th>Quantidade</th>
+            <th>Valor Unit</th>
+            <th>Valor Total</th>
+            <th>Data Venda</th>
+            <th>Data Recebimento</th>
+            <th>Funções</th>
+        </tr>
         `;
     }
-    return card;
+    return row;
+}
+
+function tableBody(dado) {
+    const row = document.createElement('tr');
+
+    if(modoAtual === "estoque") {
+        row.innerHTML = `
+        <td>${dado.nome}</td>
+        <td>${dado.quantidade}</td>
+        <td>
+            <button onclick="delFunc(${dado.id_prod})">Deletar</button>
+            <button onclick="updFunc(${dado.id_prod})">Atualizar</button>
+        </td>
+        `;
+    } else if(modoAtual === "compra") {
+        row.innerHTML = `
+        <td>${dado.id_prod}</td>
+        <td>${dado.vendedor}</td>
+        <td>${dado.quantidade}</td>
+        <td>${dado.valor_unitario}</td>
+        <td>${dado.valor_total}</td>
+        <td>${formatDate(dado.data_compra)}</td>
+        <td>${formatDate(dado.data_pagamento)}</td>
+        <td>
+            <button onclick="delFunc(${dado.id_compra})">Deletar</button>
+            <button onclick="updFunc(${dado.id_compra})">Atualizar</button>
+        </td>
+        `;
+    } else { // venda
+        row.innerHTML = `
+        <td>${dado.id_prod}</td>
+        <td>${dado.comprador}</td>
+        <td>${dado.quantidade}</td>
+        <td>${dado.valor_unitario}</td>
+        <td>${dado.valor_total}</td>
+        <td>${formatDate(dado.data_venda)}</td>
+        <td>${formatDate(dado.data_recebimento)}</td>
+        <td>
+            <button onclick="delFunc(${dado.id_venda})">Deletar</button>
+            <button onclick="updFunc(${dado.id_venda})">Atualizar</button>
+        </td>
+        `;
+    }
+    return row;
+}
+
+function formatDate(date) {
+    const TZ = date.split("T")
+    const [year, month, day] = TZ[0].split("-");
+    return `${day}/${month}/${year}`;
 }
 
 async function delFunc(id) {
@@ -139,7 +195,7 @@ async function updFunc(id) {
     let url = `${config[modoAtual].route}/${id}`;
 
     openModal();
-    fillField(datas);
+    //fillField(datas);
     try {
         const resposta = await fetch(url, {
             method: "PATCH",
@@ -174,7 +230,6 @@ function closeModal() {
 }
 
 function openModal() {
-    const modal = document.getElementById('modal');
     const form = document.getElementById('dynamicForm');
     const title = document.getElementById('modalTitle');
 
@@ -193,7 +248,7 @@ function openModal() {
 
         form.appendChild(input);
     });
-    modal.style.display = "flex";
+    document.getElementById('modal').style.display = "flex";
 }
 
 // open modal page for POST
@@ -235,7 +290,6 @@ document.getElementById('btnSave').addEventListener('click', async(e) => {
             },
             body: JSON.stringify(dados)
         });
-        const resultado = await resposta.json();
 
         // reset to POST method
         formModo = "create";
@@ -269,7 +323,7 @@ document.getElementById('btnPesquisar').addEventListener('click', async(e) => {
         });
         const dados = await resposta.json();
 
-        createCards(dados);
+        createTable(dados);
     } catch (error) {
         console.log("Erro na requisição", error);
     }

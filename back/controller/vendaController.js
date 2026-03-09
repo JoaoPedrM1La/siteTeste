@@ -4,7 +4,7 @@ export const criarVenda = async (req, res) => {
     const { id_prod, comprador, quantidade, valor_unitario, data_venda, data_recebimento } = req.body;
     try {
         await pool.query(
-            'INSERT INTO venda (id_prod, comprador, quantidade, valor_unitario, data_venda, data_recebimento) VALUES ($1, $2, $3, $4, COALESCE($5, CURRENT_DATE), $6)',
+            'INSERT INTO venda (id_prod, comprador, quantidade, valor_unitario, data_venda, data_recebimento) VALUES ($1, $2, $3, $4, COALESCE($5, CURRENT_DATE), COALESCE($6, CURRENT_DATE))',
             [id_prod, comprador, quantidade, valor_unitario, data_venda, data_recebimento]
         )
         res.status(201).json({ message: "Venda salva" });

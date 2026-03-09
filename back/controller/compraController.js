@@ -4,7 +4,7 @@ export const criarCompra = async (req, res) => {
     const { id_prod, vendedor, quantidade, valor_unitario, data_compra, data_pagamento } = req.body;
     try {
         await pool.query(
-            'INSERT INTO compra (id_prod, vendedor, quantidade, valor_unitario, data_compra, data_pagamento) VALUES ($1, $2, $3, $4, COALESCE($5, CURRENT_DATE), $6)',
+            'INSERT INTO compra (id_prod, vendedor, quantidade, valor_unitario, data_compra, data_pagamento) VALUES ($1, $2, $3, $4, COALESCE($5, CURRENT_DATE), COALESCE($6, CURRENT_DATE))',
             [id_prod, vendedor, quantidade, valor_unitario, data_compra, data_pagamento]
         );
         res.status(201).json({ message: "Compra salva" });

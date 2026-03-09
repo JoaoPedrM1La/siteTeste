@@ -7,7 +7,7 @@ WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'estoque')\gexec
 CREATE TABLE IF NOT EXISTS produtos (
     id_prod SERIAL PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
-    quantidade DECIMAL(10, 2) DEFAULT 0
+    quantidade DECIMAL(10, 2)
 );
 
 CREATE TABLE IF NOT EXISTS compra (
@@ -17,8 +17,8 @@ CREATE TABLE IF NOT EXISTS compra (
     quantidade DECIMAL(10, 2) NOT NULL,
     valor_unitario NUMERIC(10, 2) NOT NULL,
     valor_total NUMERIC(10, 2),
-    data_compra DATE DEFAULT CURRENT_DATE,
-    data_pagamento DATE DEFAULT CURRENT_DATE,
+    data_compra DATE,
+    data_pagamento DATE,
     CONSTRAINT fk_produto FOREIGN KEY(id_prod) REFERENCES produtos(id_prod)
 );
 
@@ -29,8 +29,8 @@ CREATE TABLE IF NOT EXISTS venda (
     quantidade DECIMAL(10, 2) NOT NULL,
     valor_unitario NUMERIC(10, 2) NOT NULL,
     valor_total NUMERIC(10, 2),
-    data_venda DATE DEFAULT CURRENT_DATE,
-    data_recebimento DATE DEFAULT CURRENT_DATE,
+    data_venda DATE,
+    data_recebimento DATE,
     CONSTRAINT fk_produto FOREIGN KEY(id_prod) REFERENCES produtos(id_prod)
 );
 
