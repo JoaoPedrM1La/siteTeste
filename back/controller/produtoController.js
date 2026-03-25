@@ -30,9 +30,9 @@ export const listarProd = async (req, res) => {
 }
 
 export const mostrarProd = async (req, res) => {
-    const { id_prod } = req.params;
+    const { nome } = req.params;
     try {
-        const result = await pool.query('SELECT * FROM produtos WHERE id_prod = $1', [id_prod]);
+        const result = await pool.query('SELECT * FROM produtos WHERE nome ILIKE $1', [`%${nome}%`]);
 
         if(result.rows.length === 0) {
             return res.status(404).json({ message: "Produto não encontrado" });

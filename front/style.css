@@ -144,3 +144,19 @@ tbody {
 #btnAdd:hover {
   transform: scale(1.1);
 }
+
+.autocomplete-list {
+  border: 1px solid #ccc;
+  max-height: 150px;
+  overflow-y: auto;
+  background: white;
+}
+
+.autocomplete-list div {
+  padding: 6px;
+  cursor: pointer;
+}
+
+.autocomplete-list div:hover {
+  background-color: #eee;
+}

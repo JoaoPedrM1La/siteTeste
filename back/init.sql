@@ -10,28 +10,36 @@ CREATE TABLE IF NOT EXISTS produtos (
     quantidade DECIMAL(10, 2)
 );
 
+CREATE TABLE IF NOT EXISTS cliente (
+    id_cliente SERIAL PRIMARY KEY,
+    nome_cliente VARCHAR(255) NOT NULL,
+    saldo DECIMAL(10, 2) NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS compra (
     id_compra SERIAL PRIMARY KEY,
     id_prod INT,
-    vendedor VARCHAR(255) NOT NULL,
+    id_cliente INT,
     quantidade DECIMAL(10, 2) NOT NULL,
     valor_unitario NUMERIC(10, 2) NOT NULL,
     valor_total NUMERIC(10, 2),
     data_compra DATE,
     data_pagamento DATE,
-    CONSTRAINT fk_produto FOREIGN KEY(id_prod) REFERENCES produtos(id_prod)
+    CONSTRAINT fk_produto FOREIGN KEY(id_prod) REFERENCES produtos(id_prod),
+    CONSTRAINT fk_cliente FOREIGN KEY(id_cliente) REFERENCES cliente(id_cliente)
 );
 
 CREATE TABLE IF NOT EXISTS venda (
     id_venda SERIAL PRIMARY KEY,
     id_prod INT,
-    comprador VARCHAR(255) NOT NULL,
+    id_cliente INT,
     quantidade DECIMAL(10, 2) NOT NULL,
     valor_unitario NUMERIC(10, 2) NOT NULL,
     valor_total NUMERIC(10, 2),
     data_venda DATE,
     data_recebimento DATE,
-    CONSTRAINT fk_produto FOREIGN KEY(id_prod) REFERENCES produtos(id_prod)
+    CONSTRAINT fk_produto FOREIGN KEY(id_prod) REFERENCES produtos(id_prod),
+    CONSTRAINT fk_cliente FOREIGN KEY(id_cliente) REFERENCES cliente(id_cliente)
 );
 
 -- functions
@@ -112,6 +120,72 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION log_saldo_compra()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE cliente
+    SET saldo = saldo - NEW.valor_total
+    WHERE id_cliente = NEW.id_cliente;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION log_saldo_venda()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE cliente
+    SET saldo = saldo + NEW.valor_total
+    WHERE id_cliente = NEW.id_cliente;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION log_saldo_upd_compra()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE cliente
+    SET saldo = saldo - (NEW.valor_total - OLD.valor_total)
+    WHERE id_cliente = NEW.id_cliente;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION log_saldo_upd_venda()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE cliente
+    SET saldo = saldo + (NEW.valor_total - OLD.valor_total)
+    WHERE id_cliente = NEW.id_cliente;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION log_saldo_dlt_compra()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE cliente
+    SET saldo = saldo + OLD.valor_total
+    WHERE id_cliente = OLD.id_cliente;
+
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION log_saldo_dlt_venda()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE cliente
+    SET saldo = saldo - OLD.valor_total
+    WHERE id_cliente = OLD.id_cliente;
+
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
 -- triggers
 CREATE TRIGGER trg_calc_total_compra
 BEFORE INSERT OR UPDATE ON compra
@@ -152,3 +226,33 @@ CREATE TRIGGER trg_qnt_dlt_venda
 AFTER DELETE ON venda
 FOR EACH ROW
 EXECUTE FUNCTION log_qnt_dlt_venda();
+
+CREATE TRIGGER trg_saldo_compra
+AFTER INSERT ON compra
+FOR EACH ROW
+EXECUTE FUNCTION log_saldo_compra();
+
+CREATE TRIGGER trg_saldo_venda
+AFTER INSERT ON venda
+FOR EACH ROW
+EXECUTE FUNCTION log_saldo_venda();
+
+CREATE TRIGGER trg_saldo_upd_compra
+AFTER UPDATE ON compra
+FOR EACH ROW
+EXECUTE FUNCTION log_saldo_upd_compra();
+
+CREATE TRIGGER trg_saldo_upd_venda
+AFTER UPDATE ON venda
+FOR EACH ROW
+EXECUTE FUNCTION log_saldo_upd_venda();
+
+CREATE TRIGGER trg_saldo_dlt_compra
+AFTER DELETE ON compra
+FOR EACH ROW
+EXECUTE FUNCTION log_saldo_dlt_compra();
+
+CREATE TRIGGER trg_saldo_dlt_venda
+AFTER DELETE ON venda
+FOR EACH ROW
+EXECUTE FUNCTION log_saldo_dlt_venda();

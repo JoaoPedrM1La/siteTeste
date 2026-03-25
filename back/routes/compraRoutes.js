@@ -5,7 +5,7 @@ const route = Router();
 
 route.post('/', criarCompra);
 route.get('/', listarCompra);
-route.get('/:id_compra', mostrarCompra);
+route.get('/:value', mostrarCompra);
 route.patch('/:id_compra', atualizarCompra);
 route.delete('/:id_compra', deletarCompra);
 

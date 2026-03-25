@@ -12,12 +12,20 @@ const config = {
             { name: "quantidade", type: "number", placeholder: "Quantidade" }
         ]  
     },
+    cliente: {
+        title: "Cliente",
+        route: "http://localhost:3000/cliente",
+        fields: [
+            { name: "nome_cliente", type: "text", placeholder: "Nome do cliente" },
+            { name: "saldo", type: "number", placeholder: "Saldo" }
+        ]
+    },
     compra: {
         title: "Compra",
         route: "http://localhost:3000/compra",
         fields: [
-            { name: "id_prod", type: "number", placeholder: "ID do produto" },
-            { name: "vendedor", type: "text", placeholder: "Vendedor" },
+            { name: "id_prod", type: "autocomplete", placeholder: "Pesquisar produto" },
+            { name: "id_cliente", type: "autocomplete", placeholder: "Pesquisar cliente" },
             { name: "quantidade", type: "number", placeholder: "Quantidade" },
             { name: "valor_unitario", type: "number", placeholder: "Valor unitário(p/kg)" },
             { name: "data_compra", type: "date", placeholder: "Data da compra" },
@@ -28,25 +36,30 @@ const config = {
         title: "Venda",
         route: "http://localhost:3000/venda",
         fields: [
-            { name: "id_prod", type: "number", placeholder: "ID do produto" },
-            { name: "comprador", type: "text", placeholder: "Comprador" },
+            { name: "id_prod", type: "autocomplete", placeholder: "Pesquisar produto" },
+            { name: "id_cliente", type: "autocomplete", placeholder: "Pesquisar cliente" },
             { name: "quantidade", type: "number", placeholder: "Quantidade" },
             { name: "valor_unitario", type: "number", placeholder: "Valor unitário(p/kg)" },
             { name: "data_venda", type: "date", placeholder: "Data da venda" },
             { name: "data_recebimento", type: "date", placeholder: "Data de recebimento" }
         ] 
+    },
+    historico: {
+        title: "Historico",
+        route: "http://localhost:3000/cliente/infos",
+        fields: []
     }
 }
 
 // menus
 document.getElementById('btnEstoque').addEventListener('click', () => changeMode("estoque"));
+document.getElementById('btnCliente').addEventListener('click', () => changeMode("cliente"));
 document.getElementById('btnCompra').addEventListener('click', () => changeMode("compra"));
 document.getElementById('btnVenda').addEventListener('click', () => changeMode("venda"));
 
 // page function
 function changeMode(modoNovo) {
     modoAtual = modoNovo;
-    console.log(`Modo alterado para ${modoAtual}`);
     localStorage.setItem("modoAtual", modoNovo);
     closeModal();
     loadFunc();
@@ -87,7 +100,21 @@ async function createTable(dados) {
 function tableHeader() {
     const row = document.createElement('thead');
 
-    if(modoAtual === "estoque") {
+    if(modoAtual === "historico") {
+        row.innerHTML = `
+        <tr>
+            <th>Tipo</th>
+            <th>Produto</th>
+            <th>Cliente</th>
+            <th>Quantidade</th>
+            <th>Valor Unit</th>
+            <th>Valor Total</th>
+            <th>Data Inicial</th>
+            <th>Data Final</th>
+            <th>Funções</th>
+        </tr>
+        `;
+    } else if(modoAtual === "estoque") {
         row.innerHTML = `
         <tr>
             <th>Nome</th>
@@ -95,11 +122,19 @@ function tableHeader() {
             <th>Funções</th>
         </tr>
         `;
+    } else if(modoAtual === "cliente") {
+        row.innerHTML = `
+        <tr>
+            <th>Nome</th>
+            <th>Saldo</th>
+            <th>Funções</th>
+        </tr>
+        `;
     } else if(modoAtual === "compra") {
         row.innerHTML = `
         <tr>
             <th>Produto</th>
-            <th>Vendedor</th>
+            <th>Cliente</th>
             <th>Quantidade</th>
             <th>Valor Unit</th>
             <th>Valor Total</th>
@@ -112,7 +147,7 @@ function tableHeader() {
         row.innerHTML = `
         <tr>
             <th>Produto</th>
-            <th>Comprador</th>
+            <th>Cliente</th>
             <th>Quantidade</th>
             <th>Valor Unit</th>
             <th>Valor Total</th>
@@ -128,7 +163,22 @@ function tableHeader() {
 function tableBody(dado) {
     const row = document.createElement('tr');
 
-    if(modoAtual === "estoque") {
+    if(modoAtual === "historico") {
+        row.innerHTML = `
+        <td>${dado.tipo === "compra" ? "Compra" : "Venda"}</td>
+        <td>${dado.nome_prod}</td>
+        <td>${dado.nome_cliente}</td>
+        <td>${dado.quantidade}</td>
+        <td>${dado.valor_unitario}</td>
+        <td>${dado.valor_total}</td>
+        <td>${formatDate(dado.data_inicio)}</td>
+        <td>${formatDate(dado.data_final)}</td>
+        <td>
+            <button onclick="delFunc(${dado.id})">Deletar</button>
+            <button onclick="updFunc(${dado.id})">Atualizar</button>
+        </td>
+        `;
+    } else if(modoAtual === "estoque") {
         row.innerHTML = `
         <td>${dado.nome}</td>
         <td>${dado.quantidade}</td>
@@ -137,10 +187,20 @@ function tableBody(dado) {
             <button onclick="updFunc(${dado.id_prod})">Atualizar</button>
         </td>
         `;
+    } else if(modoAtual === "cliente") {
+        row.innerHTML = `
+        <td>${dado.nome_cliente}</td>
+        <td>${dado.saldo}</td>
+        <td>
+            <button onclick="delFunc(${dado.id_cliente})">Deletar</button>
+            <button onclick="updFunc(${dado.id_cliente})">Atualizar</button>
+            <button onclick="infoClienteFunc(${dado.id_cliente})">Tabelas</button>
+        </td>
+        `;
     } else if(modoAtual === "compra") {
         row.innerHTML = `
-        <td>${dado.id_prod}</td>
-        <td>${dado.vendedor}</td>
+        <td>${dado.nome_prod}</td>
+        <td>${dado.nome_cliente}</td>
         <td>${dado.quantidade}</td>
         <td>${dado.valor_unitario}</td>
         <td>${dado.valor_total}</td>
@@ -153,8 +213,8 @@ function tableBody(dado) {
         `;
     } else { // venda
         row.innerHTML = `
-        <td>${dado.id_prod}</td>
-        <td>${dado.comprador}</td>
+        <td>${dado.nome_prod}</td>
+        <td>${dado.nome_cliente}</td>
         <td>${dado.quantidade}</td>
         <td>${dado.valor_unitario}</td>
         <td>${dado.valor_total}</td>
@@ -176,7 +236,7 @@ function formatDate(date) {
 }
 
 async function delFunc(id) {
-    let url = `${config[modoAtual].route}/${id}`;
+    const url = `${config[modoAtual].route}/${id}`;
 
     try {
         await fetch(url, {
@@ -192,7 +252,7 @@ async function updFunc(id) {
     formModo = "update";
     updId = id;
 
-    let url = `${config[modoAtual].route}/${id}`;
+    const url = `${config[modoAtual].route}/${id}`;
 
     openModal();
     //fillField(datas);
@@ -209,6 +269,23 @@ async function updFunc(id) {
         console.log("Erro na requisição");
     }
     loadFunc();
+}
+
+async function infoClienteFunc(id) {
+    modoAtual = "historico";
+
+    const url = `${config[modoAtual].route}/${id}`;
+
+    try {
+        const resposta = await fetch(url, {
+            method: "GET"
+        });
+        const datas = await resposta.json();
+
+        createTable(datas);
+    } catch (error) {
+        console.log("Erro na requisição");
+    }
 }
 
 // autofill for PATCH
@@ -229,24 +306,71 @@ function closeModal() {
     document.getElementById('modal').style.display = "none";
 }
 
-function openModal() {
+async function openModal() {
     const form = document.getElementById('dynamicForm');
     const title = document.getElementById('modalTitle');
 
     form.innerHTML = "";
 
     const configuration = config[modoAtual];
-
     title.textContent = configuration.title;
 
-    configuration.fields.forEach(field => {
-        const input = document.createElement('input');
-        input.type = field.type;
-        input.name = field.name;
-        input.placeholder = field.placeholder;
-        //input.required = true; // retirar (false -> quantidade.prod, data_compra/venda)
+    configuration.fields.forEach(async field => {
+        if(field.type === "autocomplete") {
+            const wrapper = document.createElement('div');
 
-        form.appendChild(input);
+            const input = document.createElement('input');
+            input.type = "text";
+            input.placeholder = field.placeholder;
+
+            const hidden = document.createElement('input');
+            hidden.type = "hidden";
+            hidden.name = field.name;
+
+            const list = document.createElement('div');
+            list.className = "autocomplete-list";
+
+            const isProduto = field.name === "id_prod";
+            const url = isProduto ? config.estoque.route : config.cliente.route;
+
+            const nomeKey = isProduto ? "nome" : "nome_cliente";
+            const idKey = isProduto ? "id_prod" : "id_cliente";
+
+            const resposta = await fetch(url, { // possivelmente mudar para suportar estoque/cliente
+                method: "GET"
+            });
+            const dados = await resposta.json();
+
+            input.addEventListener('input', () => {
+                list.innerHTML = "";
+                const texto = input.value.toLowerCase();
+
+                dados.filter(d => d[nomeKey].toLowerCase().includes(texto))
+                .forEach(dado => {
+                    const item = document.createElement('div');
+                    item.textContent = dado[nomeKey];
+
+                    item.addEventListener('click', () => {
+                        input.value = dado[nomeKey];
+                        hidden.value = dado[idKey];
+                        list.innerHTML = "";
+                    });
+                    list.appendChild(item);
+                })
+            });
+            wrapper.appendChild(input);
+            wrapper.appendChild(hidden);
+            wrapper.appendChild(list);
+
+            form.appendChild(wrapper);
+        } else {
+            const input = document.createElement('input');
+            input.type = field.type;
+            input.name = field.name;
+            input.placeholder = field.placeholder;
+    
+            form.appendChild(input);
+        }
     });
     document.getElementById('modal').style.display = "flex";
 }
@@ -310,12 +434,12 @@ document.getElementById('btnCancel').addEventListener('click', (e) => {
 document.getElementById('btnPesquisar').addEventListener('click', async(e) => {
     e.preventDefault();
 
-    const id = document.getElementById('barPesquisar').value;
-    if(!id) {
+    const valor = document.getElementById('barPesquisar').value;
+    if(!valor) {
         return loadFunc();
     }
 
-    let url = `${config[modoAtual].route}/${id}`;
+    const url = `${config[modoAtual].route}/${encodeURIComponent(valor)}`;
 
     try {
         const resposta = await fetch(url, {
